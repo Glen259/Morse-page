@@ -37,7 +37,7 @@ function flash(on) {
   document.body.style.background = on ? "#002200" : "black";
 }
 
-// 🔊 stable tone generator
+// 🔊 clean Morse tone
 function beep(startTime, duration) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -86,31 +86,29 @@ function playMorse() {
 
       const duration = symbol === "." ? unit : unit * 3;
 
-      // 🔊 schedule tone
+      // 🔊 audio
       beep(t, duration);
 
-      // 💡 flash synced to tone
-      flash(true);
-      setTimeout(() => flash(false), (t - ctx.currentTime + duration) * 1000);
+      // 💡 flash synced to same timing
+      const startDelay = (t - ctx.currentTime) * 1000;
+
+      setTimeout(() => flash(true), startDelay);
+      setTimeout(() => flash(false), startDelay + duration * 1000);
 
       t += duration;
-
-      // intra-character gap
       t += unit;
     }
 
-    // inter-character gap
     t += unit * 2;
   }
 
-  // cleanup after last tone
-  const endTime = (t - ctx.currentTime) * 1000;
+  const endDelay = (t - ctx.currentTime) * 1000;
 
   setTimeout(() => {
     flash(false);
     setStatus("IDLE");
     isPlaying = false;
-  }, endTime + 200);
+  }, endDelay + 200);
 }
 
 function stopMorse() {
