@@ -2,8 +2,13 @@
 <html>
 <body>
 
-<button onclick="playMorse()">Play Code</button>
+<body>
 
+<button onclick="playMorse()">TRANSMIT</button>
+<button onclick="stopMorse()">STOP</button>
+
+</body>
+  
 <script>
 const morseMap = {
   "0": "-----",
@@ -21,18 +26,23 @@ const morseMap = {
 const message = "1234";
 
 let ctx;
+let stopFlag = false;
+let isPlaying = false;
 
-// 🎯 Clean Morse tone generator
+// optional visual indicator
+function flash(on) {
+  document.body.style.background = on ? "#001a00" : "black";
+}
+
+// 🎯 tone generator
 function beep(startTime, duration) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   const filter = ctx.createBiquadFilter();
 
-  // 🔊 Radio-style tone (not bell-like)
   osc.type = "sine";
   osc.frequency.value = 550;
 
-  // 🔇 smooth but not "pingy"
   filter.type = "lowpass";
   filter.frequency.value = 1000;
 
@@ -40,7 +50,6 @@ function beep(startTime, duration) {
   filter.connect(gain);
   gain.connect(ctx.destination);
 
-  // smooth attack/decay (prevents clicks)
   gain.gain.setValueAtTime(0.0001, startTime);
   gain.gain.linearRampToValueAtTime(0.2, startTime + 0.01);
   gain.gain.setValueAtTime(0.2, startTime + duration - 0.01);
@@ -50,16 +59,26 @@ function beep(startTime, duration) {
   osc.stop(startTime + duration);
 }
 
-function playMorse() {
+async function playMorse() {
+  if (isPlaying) return; // 🚫 prevents restart spam
+
+  stopFlag = false;
+  isPlaying = true;
+
   ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-  const unit = 0.18; // 🔥 Morse speed (lower = faster)
+  const unit = 0.18;
   let t = ctx.currentTime;
 
-  message.split("").forEach(char => {
+  for (const char of message) {
+    if (stopFlag) break;
+
     const code = morseMap[char];
 
-    code.split("").forEach(symbol => {
+    for (const symbol of code) {
+      if (stopFlag) break;
+
+      flash(true);
 
       if (symbol === ".") {
         beep(t, unit);
@@ -69,13 +88,28 @@ function playMorse() {
         t += unit * 3;
       }
 
-      // gap between elements of same character
-      t += unit;
-    });
+      await new Promise(r => setTimeout(r, unit * 1000));
+      flash(false);
 
-    // gap between characters (numbers)
+      t += unit;
+    }
+
     t += unit * 2;
-  });
+  }
+
+  flash(false);
+  isPlaying = false;
+}
+
+function stopMorse() {
+  stopFlag = true;
+  isPlaying = false;
+  flash(false);
+
+  if (ctx) {
+    ctx.close();
+    ctx = null;
+  }
 }
 </script>
 
