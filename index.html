@@ -34,7 +34,7 @@ function playMorse() {
   ctx = new (window.AudioContext || window.webkitAudioContext)();
 
   let time = 0;
-  const unit = 100;
+  const unit = 250;
 
   message.split("").forEach(char => {
     const code = morseMap[char];
