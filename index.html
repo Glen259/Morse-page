@@ -29,7 +29,7 @@ function beep(startTime, duration) {
   const filter = ctx.createBiquadFilter();
 
   // 🔊 Radio-style tone (not bell-like)
-  osc.type = "square";
+  osc.type = "sine";
   osc.frequency.value = 550;
 
   // 🔇 smooth but not "pingy"
@@ -53,7 +53,7 @@ function beep(startTime, duration) {
 function playMorse() {
   ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-  const unit = 0.12; // 🔥 Morse speed (lower = faster)
+  const unit = 0.18; // 🔥 Morse speed (lower = faster)
   let t = ctx.currentTime;
 
   message.split("").forEach(char => {
